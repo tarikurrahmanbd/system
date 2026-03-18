@@ -10,10 +10,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'cl
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- Admin Key ---
 ADMIN_PASSWORD = "admin123"
 
-# --- Models ---
 class Member(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -33,7 +31,18 @@ class Attendance(db.Model):
     member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
 
-# --- Auth ---
+@app.route('/')
+def index():
+    is_admin = session.get('admin', False)
+    members = Member.query.order_by(Member.id.asc()).all()
+    # Eikhane desc() dewa hoyeche jate New Event shurute thake
+    events = Event.query.order_by(Event.id.desc()).all()
+    total_m = len(members)
+    total_a = Attendance.query.count()
+    top_members = db.session.query(Member.name, Member.role, func.count(Attendance.id).label('total'))\
+        .join(Attendance).group_by(Member.id).order_by(func.count(Attendance.id).desc()).limit(5).all()
+    return render_template('index.html', members=members, events=events, total_m=total_m, total_a=total_a, top_members=top_members, is_admin=is_admin)
+
 @app.route('/login', methods=['POST'])
 def login():
     if request.form.get('password') == ADMIN_PASSWORD:
@@ -44,21 +53,6 @@ def login():
 def logout():
     session.pop('admin', None)
     return redirect(url_for('index'))
-
-# --- Routes ---
-@app.route('/')
-def index():
-    is_admin = session.get('admin', False)
-    members = Member.query.order_by(Member.id.asc()).all()
-    events = Event.query.order_by(Event.id.desc()).all()
-    total_m = len(members)
-    total_a = Attendance.query.count()
-    
-    # Best Analytics Leaderboard
-    top_members = db.session.query(Member.name, Member.role, func.count(Attendance.id).label('total'))\
-        .join(Attendance).group_by(Member.id).order_by(func.count(Attendance.id).desc()).limit(5).all()
-        
-    return render_template('index.html', members=members, events=events, total_m=total_m, total_a=total_a, top_members=top_members, is_admin=is_admin)
 
 @app.route('/add_member', methods=['POST'])
 def add_member():
@@ -106,5 +100,8 @@ def delete_member(id):
         db.session.commit()
     return redirect(url_for('index'))
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
