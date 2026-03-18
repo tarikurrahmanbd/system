@@ -10,27 +10,65 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --bg: #050505; --panel: #0d0d0d; --accent: #6366f1; --border: rgba(255, 255, 255, 0.08); }
-        body { background: var(--bg); color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; }
-        .wrapper { display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 260px; background: var(--panel); border-right: 1px solid var(--border); padding: 40px 20px; display: flex; flex-direction: column; transition: 0.3s; z-index: 1000; }
+        body { background: var(--bg); color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; overflow-x: hidden; }
+
+        /* Mobile Toggle Button */
+        .mobile-header { 
+            display: none; position: fixed; top: 0; width: 100%; height: 60px; 
+            background: var(--panel); border-bottom: 1px solid var(--border); 
+            z-index: 1500; align-items: center; padding: 0 20px; 
+        }
+        .toggle-btn { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+
+        .wrapper { display: flex; height: 100vh; }
+        
+        .sidebar { 
+            width: 280px; background: var(--panel); border-right: 1px solid var(--border); 
+            padding: 40px 20px; display: flex; flex-direction: column; transition: 0.3s ease; z-index: 2000; 
+        }
+
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; transition: 0.3s; }
+
+        /* Responsive Fix for Overlap */
+        @media (max-width: 992px) {
+            .mobile-header { display: flex; justify-content: space-between; }
+            .sidebar { 
+                position: fixed; left: -280px; height: 100%; 
+            }
+            .sidebar.active { left: 0; box-shadow: 20px 0 50px rgba(0,0,0,0.8); }
+            .main-content { padding: 80px 20px 20px 20px; }
+            .sidebar-overlay { 
+                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.5); z-index: 1900; 
+            }
+            .sidebar-overlay.active { display: block; }
+        }
+
         .nav-link { color: #64748b; padding: 14px 18px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 12px; font-weight: 600; text-decoration: none; }
         .nav-link.active { background: rgba(255,255,255,0.03); color: #fff; border: 1px solid var(--border); }
-        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
-        .section { display: none; } .section.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .m-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 20px; padding: 24px; position: relative; transition: 0.3s; }
+        .m-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 20px; padding: 24px; position: relative; transition: 0.3s; height: 100%; }
         .m-card:hover { border-color: var(--accent); transform: translateY(-3px); }
         .event-badge { background: rgba(99, 102, 241, 0.15); color: var(--accent); padding: 5px 12px; border-radius: 6px; font-size: 10px; font-weight: 800; border: 1px solid rgba(99, 102, 241, 0.3); margin-bottom: 15px; display: inline-block; text-transform: uppercase; }
         .search-box { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; width: 100%; margin-bottom: 15px; outline: none; }
-        .btn-action { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 12px 24px; font-weight: 700; }
-        .modal-content { background: #0d0d0d; border: 1px solid var(--border); border-radius: 24px; color: #fff; border: 1px solid var(--accent); }
+        .btn-action { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 12px 24px; font-weight: 700; width: 100%; }
+        @media (min-width: 768px) { .btn-action { width: auto; } }
+        .section { display: none; } .section.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-content { background: #0d0d0d; border: 1px solid var(--accent); border-radius: 24px; color: #fff; }
     </style>
 </head>
 <body>
 
+    <div class="mobile-header">
+        <button class="toggle-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <h5 class="m-0 fw-800">ISC<span style="color:var(--accent)">.</span>CORE</h5>
+        <div style="width: 24px;"></div> </div>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
     <div class="wrapper">
-        <div class="sidebar">
-            <h4 class="fw-800 mb-5 text-white">ISC<span style="color:var(--accent)">.</span>CORE</h4>
+        <div class="sidebar" id="sidebar">
+            <h4 class="fw-800 mb-5 text-white d-none d-lg-block">ISC<span style="color:var(--accent)">.</span>CORE</h4>
             <nav class="flex-grow-1">
                 <div class="nav-link active" onclick="tab('home', this)"><i class="fas fa-id-badge"></i> Members</div>
                 <div class="nav-link" onclick="tab('event_sec', this)"><i class="fas fa-calendar-alt"></i> Events</div>
@@ -49,13 +87,13 @@
 
         <div class="main-content">
             <div id="home" class="section active">
-                <div class="d-flex justify-content-between align-items-center mb-5">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5">
                     <h1 class="fw-800 m-0">Registry</h1>
-                    {% if is_admin %}<button class="btn-action" data-bs-toggle="modal" data-bs-target="#addM">ADD MEMBER</button>{% endif %}
+                    {% if is_admin %}<button class="btn-action mt-3 mt-md-0" data-bs-toggle="modal" data-bs-target="#addM">ADD MEMBER</button>{% endif %}
                 </div>
                 <div class="row g-4">
                     {% for m in members %}
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-6 col-lg-4">
                         <div class="m-card">
                             {% if is_admin %}
                             <div style="position:absolute; top:15px; right:15px; display:flex; gap:12px; z-index:10;">
@@ -70,11 +108,11 @@
                             {% if is_admin %}
                             <form action="/mark_attendance" method="POST" class="d-flex gap-2">
                                 <input type="hidden" name="member_id" value="{{ m.id }}">
-                                <select name="event_id" class="search-box mb-0 py-1 px-2 small" style="font-size: 10px;" required>
+                                <select name="event_id" class="search-box mb-0 py-1 px-2" style="font-size: 11px;" required>
                                     <option value="">Assign Event...</option>
                                     {% for e in events %}<option value="{{ e.id }}">{{ e.name }}</option>{% endfor %}
                                 </select>
-                                <button class="btn btn-sm btn-primary px-3"><i class="fas fa-plus"></i></button>
+                                <button class="btn btn-sm btn-primary"><i class="fas fa-plus"></i></button>
                             </form>
                             {% endif %}
                         </div>
@@ -96,7 +134,7 @@
                         <form action="/edit_member/{{m.id}}" method="POST">
                             <input type="text" name="name" class="search-box" value="{{m.name}}" required>
                             <input type="text" name="role" class="search-box" value="{{m.role}}">
-                            <button class="btn-action w-100">UPDATE</button>
+                            <button class="btn-action">UPDATE</button>
                         </form>
                     </div></div></div>
                     {% endfor %}
@@ -104,13 +142,13 @@
             </div>
 
             <div id="event_sec" class="section">
-                <div class="d-flex justify-content-between align-items-center mb-5">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5">
                     <h1 class="fw-800 m-0">Event Logs</h1>
-                    {% if is_admin %}<button class="btn-action" data-bs-toggle="modal" data-bs-target="#addEv">CREATE EVENT</button>{% endif %}
+                    {% if is_admin %}<button class="btn-action mt-3 mt-md-0" data-bs-toggle="modal" data-bs-target="#addEv">CREATE EVENT</button>{% endif %}
                 </div>
                 <div class="row g-4">
                     {% for e in events %}
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
                         <div class="m-card">
                             {% if is_admin %}
                             <div style="position:absolute; top:20px; right:20px; z-index:10;">
@@ -144,7 +182,7 @@
                             <input type="text" name="location" class="search-box" value="{{e.location}}">
                             <input type="text" name="time" class="search-box" value="{{e.time}}">
                             <textarea name="description" class="search-box" rows="3">{{e.description}}</textarea>
-                            <button class="btn-action w-100">UPDATE EVENT</button>
+                            <button class="btn-action">UPDATE EVENT</button>
                         </form>
                     </div></div></div>
                     {% endfor %}
@@ -155,22 +193,29 @@
 
     <div class="modal fade" id="addM" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4">
         <h5 class="mb-4">New Member</h5>
-        <form action="/add_member" method="POST"><input type="text" name="name" class="search-box" placeholder="Name" required><input type="text" name="role" class="search-box" placeholder="Role"><button class="btn-action w-100">SAVE</button></form>
+        <form action="/add_member" method="POST"><input type="text" name="name" class="search-box" placeholder="Name" required><input type="text" name="role" class="search-box" placeholder="Role"><button class="btn-action">SAVE MEMBER</button></form>
     </div></div></div>
 
     <div class="modal fade" id="addEv" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4">
         <h5 class="mb-4">New Event</h5>
-        <form action="/add_event" method="POST"><input type="text" name="name" class="search-box" placeholder="Event Name" required><input type="text" name="location" class="search-box" placeholder="Location"><input type="text" name="time" class="search-box" placeholder="Date/Time"><textarea name="description" class="search-box" placeholder="Description"></textarea><button class="btn-action w-100">CREATE</button></form>
+        <form action="/add_event" method="POST"><input type="text" name="name" class="search-box" placeholder="Event Name" required><input type="text" name="location" class="search-box" placeholder="Location"><input type="text" name="time" class="search-box" placeholder="Date (e.g. 18/03/2026)"><textarea name="description" class="search-box" placeholder="Description"></textarea><button class="btn-action">CREATE EVENT</button></form>
     </div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
         function tab(id, el) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
+            if (window.innerWidth <= 992) toggleSidebar();
         }
+
         function remove(id, name) {
             Swal.fire({ title: 'Delete Member?', text: name, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', background: '#0d0d0d', color: '#fff' })
             .then((r) => { if(r.isConfirmed) window.location.href="/delete_member/"+id; });
