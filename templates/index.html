@@ -11,75 +11,36 @@
     <style>
         :root { --bg: #050505; --panel: #0d0d0d; --accent: #6366f1; --border: rgba(255, 255, 255, 0.08); }
         body { background: var(--bg); color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; }
-        
-        /* Layout Structure */
         .wrapper { display: flex; height: 100vh; overflow: hidden; }
-
-        /* Sidebar Styling */
         .sidebar { width: 260px; background: var(--panel); border-right: 1px solid var(--border); padding: 40px 20px; display: flex; flex-direction: column; transition: 0.3s; z-index: 1000; }
         .nav-link { color: #64748b; padding: 14px 18px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 12px; font-weight: 600; text-decoration: none; }
         .nav-link.active { background: rgba(255,255,255,0.03); color: #fff; border: 1px solid var(--border); }
-        .nav-link.active i { color: var(--accent); filter: drop-shadow(0 0 5px var(--accent)); }
-        
-        /* Main Content */
-        .main-content { flex: 1; padding: 40px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent 40%); }
-        .section { display: none; }
-        .section.active { display: block; animation: fadeIn 0.4s ease; }
-        
-        /* Mobile Navbar (Hidden on PC) */
-        .mobile-header { display: none; background: var(--panel); padding: 15px 20px; border-bottom: 1px solid var(--border); justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1100; }
-
-        /* RESPONSIVE CSS */
-        @media (max-width: 991px) {
-            .wrapper { flex-direction: column; }
-            .sidebar { 
-                position: fixed; left: -260px; top: 0; height: 100vh; 
-                box-shadow: 20px 0 50px rgba(0,0,0,0.5); 
-            }
-            .sidebar.show { left: 0; }
-            .mobile-header { display: flex; }
-            .main-content { padding: 20px; height: calc(100vh - 65px); }
-            .stat-val { font-size: 1.8rem; }
-            .m-card { padding: 15px; border-radius: 18px; }
-        }
-
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .section { display: none; } .section.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .m-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 24px; padding: 24px; transition: 0.3s; backdrop-filter: blur(10px); position: relative; }
+        .m-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 20px; padding: 24px; position: relative; transition: 0.3s; }
         .m-card:hover { border-color: var(--accent); transform: translateY(-3px); }
-        .search-box { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 10px 20px; color: #fff; width: 100%; outline: none; }
-        .btn-action { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 10px 20px; font-weight: 700; font-size: 14px; }
-        .stat-val { font-size: 2.5rem; font-weight: 800; background: linear-gradient(to right, #fff, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .event-badge { background: rgba(99, 102, 241, 0.15); color: var(--accent); padding: 5px 12px; border-radius: 6px; font-size: 10px; font-weight: 800; border: 1px solid rgba(99, 102, 241, 0.3); margin-bottom: 15px; display: inline-block; text-transform: uppercase; }
+        .search-box { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; width: 100%; margin-bottom: 15px; outline: none; }
+        .btn-action { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 12px 24px; font-weight: 700; }
+        .modal-content { background: #0d0d0d; border: 1px solid var(--border); border-radius: 24px; color: #fff; border: 1px solid var(--accent); }
     </style>
 </head>
 <body>
 
-    <div class="mobile-header">
-        <h5 class="fw-800 m-0">ISC<span style="color:var(--accent)">.</span>CORE</h5>
-        <button class="btn text-white" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
-    </div>
-
     <div class="wrapper">
-        <div class="sidebar" id="sidebar">
-            <div class="d-flex justify-content-between align-items-center mb-5">
-                <h4 class="fw-800 m-0">ISC<span style="color:var(--accent)">.</span>CORE</h4>
-                <button class="btn text-white d-lg-none" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
-            </div>
-            
+        <div class="sidebar">
+            <h4 class="fw-800 mb-5 text-white">ISC<span style="color:var(--accent)">.</span>CORE</h4>
             <nav class="flex-grow-1">
                 <div class="nav-link active" onclick="tab('home', this)"><i class="fas fa-id-badge"></i> Members</div>
-                <div class="nav-link" onclick="tab('event_sec', this)"><i class="fas fa-calendar-check"></i> Events</div>
-                <div class="nav-link" onclick="tab('stats', this)"><i class="fas fa-chart-pie"></i> Analytics</div>
+                <div class="nav-link" onclick="tab('event_sec', this)"><i class="fas fa-calendar-alt"></i> Events</div>
             </nav>
-            
             <div class="mt-auto">
                 {% if is_admin %}
-                    <div class="p-3 rounded-4 bg-success bg-opacity-10 border border-success border-opacity-20">
-                        <p class="small text-success mb-2 text-center fw-bold">ADMIN ACTIVE</p>
-                        <a href="/logout" class="btn btn-sm btn-danger w-100 rounded-3">Lock</a>
-                    </div>
+                    <a href="/logout" class="btn btn-sm btn-danger w-100 rounded-3">Lock Admin</a>
                 {% else %}
                     <form action="/login" method="POST">
-                        <input type="password" name="password" class="search-box mb-2" placeholder="Key..." style="font-size: 12px;">
+                        <input type="password" name="password" class="search-box mb-2" placeholder="Key...">
                         <button class="btn btn-sm btn-primary w-100 rounded-3">Authorize</button>
                     </form>
                 {% endif %}
@@ -88,66 +49,119 @@
 
         <div class="main-content">
             <div id="home" class="section active">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1 class="fw-800 m-0 text-white fs-2">Registry</h1>
-                    {% if is_admin %} <button class="btn-action" data-bs-toggle="modal" data-bs-target="#addM"><i class="fas fa-plus"></i></button> {% endif %}
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <h1 class="fw-800 m-0">Registry</h1>
+                    {% if is_admin %}<button class="btn-action" data-bs-toggle="modal" data-bs-target="#addM">ADD MEMBER</button>{% endif %}
                 </div>
-                <div class="row g-3">
+                <div class="row g-4">
                     {% for m in members %}
-                    <div class="col-md-6 col-xl-4">
+                    <div class="col-md-4">
                         <div class="m-card">
                             {% if is_admin %}
-                            <div style="position:absolute; top:15px; right:15px; display:flex; gap:12px;">
+                            <div style="position:absolute; top:15px; right:15px; display:flex; gap:12px; z-index:10;">
                                 <i class="fas fa-pen text-secondary" style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#editM-{{m.id}}"></i>
-                                <i class="fas fa-trash-alt text-danger" style="cursor:pointer;" onclick="remove('{{m.id}}', '{{m.name}}')"></i>
+                                <i class="fas fa-trash text-danger" style="cursor:pointer;" onclick="remove('{{m.id}}', '{{m.name}}')"></i>
                             </div>
                             {% endif %}
-                            <div onclick="new bootstrap.Modal('#mp-{{m.id}}').show();" style="cursor:pointer;">
-                                <h5 class="fw-bold mb-1 text-white">{{ m.name }}</h5>
+                            <div onclick="new bootstrap.Modal('#mv-{{m.id}}').show();" style="cursor:pointer;">
+                                <h5 class="fw-bold mb-1">{{ m.name }}</h5>
                                 <p class="text-secondary small mb-3">{{ m.role }}</p>
                             </div>
+                            {% if is_admin %}
+                            <form action="/mark_attendance" method="POST" class="d-flex gap-2">
+                                <input type="hidden" name="member_id" value="{{ m.id }}">
+                                <select name="event_id" class="search-box mb-0 py-1 px-2 small" style="font-size: 10px;" required>
+                                    <option value="">Assign Event...</option>
+                                    {% for e in events %}<option value="{{ e.id }}">{{ e.name }}</option>{% endfor %}
+                                </select>
+                                <button class="btn btn-sm btn-primary px-3"><i class="fas fa-plus"></i></button>
+                            </form>
+                            {% endif %}
                         </div>
                     </div>
+
+                    <div class="modal fade" id="mv-{{m.id}}" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4">
+                        <h4 class="fw-800 mb-1">{{ m.name }}</h4>
+                        <p class="text-secondary mb-4">{{ m.role }}</p>
+                        <h6 class="fw-bold text-primary mb-3">Event Participation:</h6>
+                        <div class="list-group">
+                            {% for att in m.attendances %}
+                            <div class="list-group-item bg-transparent text-white border-secondary small py-3"><i class="fas fa-calendar-check text-success me-2"></i> {{ att.event.name }}</div>
+                            {% else %}<p class="text-secondary small">No events found.</p>{% endfor %}
+                        </div>
+                    </div></div></div>
+
+                    <div class="modal fade" id="editM-{{m.id}}" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4">
+                        <h5 class="mb-4">Edit Profile</h5>
+                        <form action="/edit_member/{{m.id}}" method="POST">
+                            <input type="text" name="name" class="search-box" value="{{m.name}}" required>
+                            <input type="text" name="role" class="search-box" value="{{m.role}}">
+                            <button class="btn-action w-100">UPDATE</button>
+                        </form>
+                    </div></div></div>
                     {% endfor %}
                 </div>
             </div>
 
             <div id="event_sec" class="section">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1 class="fw-800 m-0 text-white fs-2">Events</h1>
-                    {% if is_admin %} <button class="btn-action" data-bs-toggle="modal" data-bs-target="#addEv">NEW</button> {% endif %}
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <h1 class="fw-800 m-0">Event Logs</h1>
+                    {% if is_admin %}<button class="btn-action" data-bs-toggle="modal" data-bs-target="#addEv">CREATE EVENT</button>{% endif %}
                 </div>
-                <div class="row g-3">
+                <div class="row g-4">
                     {% for e in events %}
                     <div class="col-md-6">
-                        <div class="m-card" onclick="new bootstrap.Modal('#el-{{e.id}}').show();" style="cursor:pointer;">
-                            <span class="badge bg-primary bg-opacity-10 text-primary mb-2">{{ e.time }}</span>
-                            <h5 class="fw-bold text-white">{{ e.name }}</h5>
-                            <p class="text-secondary small mb-0">{{ e.location }}</p>
+                        <div class="m-card">
+                            {% if is_admin %}
+                            <div style="position:absolute; top:20px; right:20px; z-index:10;">
+                                <i class="fas fa-pen text-secondary" style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#editE-{{e.id}}"></i>
+                            </div>
+                            {% endif %}
+                            <div onclick="new bootstrap.Modal('#ev-{{e.id}}').show();" style="cursor:pointer;">
+                                <span class="event-badge">{{ e.time }}</span>
+                                <h5 class="fw-800 mb-2">{{ e.name }}</h5>
+                                <p class="text-secondary small mb-0"><i class="fas fa-map-marker-alt text-danger me-2"></i>{{ e.location }}</p>
+                            </div>
                         </div>
                     </div>
-                    {% endfor %}
-                </div>
-            </div>
 
-            <div id="stats" class="section">
-                <h1 class="fw-800 mb-4 text-white fs-2">Analytics</h1>
-                <div class="row g-3 mb-4">
-                    <div class="col-6"><div class="m-card text-center p-4"><p class="text-secondary small fw-bold">USERS</p><div class="stat-val">{{ total_m }}</div></div></div>
-                    <div class="col-6"><div class="m-card text-center p-4"><p class="text-secondary small fw-bold">LOGS</p><div class="stat-val text-primary">{{ total_a }}</div></div></div>
-                </div>
-                <div class="m-card p-4">
-                    <h6 class="fw-800 mb-3 text-white"><i class="fas fa-trophy text-warning me-2"></i> Leaderboard</h6>
-                    {% for top in top_members %}
-                    <div class="d-flex justify-content-between align-items-center p-2 mb-2 rounded-3" style="background: rgba(255,255,255,0.02); border-left: 3px solid var(--accent);">
-                        <span class="text-white small fw-bold">{{ top.name }}</span>
-                        <span class="text-primary small fw-bold">{{ top.total * 100 }} XP</span>
-                    </div>
+                    <div class="modal fade" id="ev-{{e.id}}" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4">
+                        <span class="event-badge">{{ e.time }}</span>
+                        <h4 class="fw-800 mb-2">{{ e.name }}</h4>
+                        <p class="text-secondary small mb-4">{{ e.description }}</p>
+                        <h6 class="fw-bold text-primary mb-3">Participants:</h6>
+                        <div class="list-group">
+                            {% for att in e.attendances %}
+                            <div class="list-group-item bg-transparent text-white border-secondary small py-2"><i class="fas fa-user-circle text-info me-2"></i> {{ att.member.name }}</div>
+                            {% else %}<p class="text-secondary small">No participants yet.</p>{% endfor %}
+                        </div>
+                    </div></div></div>
+
+                    <div class="modal fade" id="editE-{{e.id}}" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4">
+                        <h5 class="mb-4">Edit Event</h5>
+                        <form action="/edit_event/{{e.id}}" method="POST">
+                            <input type="text" name="name" class="search-box" value="{{e.name}}" required>
+                            <input type="text" name="location" class="search-box" value="{{e.location}}">
+                            <input type="text" name="time" class="search-box" value="{{e.time}}">
+                            <textarea name="description" class="search-box" rows="3">{{e.description}}</textarea>
+                            <button class="btn-action w-100">UPDATE EVENT</button>
+                        </form>
+                    </div></div></div>
                     {% endfor %}
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="addM" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4">
+        <h5 class="mb-4">New Member</h5>
+        <form action="/add_member" method="POST"><input type="text" name="name" class="search-box" placeholder="Name" required><input type="text" name="role" class="search-box" placeholder="Role"><button class="btn-action w-100">SAVE</button></form>
+    </div></div></div>
+
+    <div class="modal fade" id="addEv" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4">
+        <h5 class="mb-4">New Event</h5>
+        <form action="/add_event" method="POST"><input type="text" name="name" class="search-box" placeholder="Event Name" required><input type="text" name="location" class="search-box" placeholder="Location"><input type="text" name="time" class="search-box" placeholder="Date/Time"><textarea name="description" class="search-box" placeholder="Description"></textarea><button class="btn-action w-100">CREATE</button></form>
+    </div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -156,13 +170,9 @@
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
-            if(window.innerWidth < 992) toggleMenu(); // Mobile-e click korle menu bondho hoye jabe
-        }
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('show');
         }
         function remove(id, name) {
-            Swal.fire({ title: 'Delete?', text: name, icon: 'warning', showCancelButton: true, confirmButtonColor: '#6366f1', background: '#0d0d0d', color: '#fff' })
+            Swal.fire({ title: 'Delete Member?', text: name, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', background: '#0d0d0d', color: '#fff' })
             .then((r) => { if(r.isConfirmed) window.location.href="/delete_member/"+id; });
         }
     </script>
